@@ -8,6 +8,7 @@ export default function Dashboard() {
   const { settings, showToast } = useApp();
   const [range, setRange] = useState('week');
   const [stats, setStats] = useState(null);
+  const [heatmap, setHeatmap] = useState(null);
 
   const load = useCallback(
     async (r) => {
@@ -23,6 +24,12 @@ export default function Dashboard() {
   useEffect(() => {
     load(range);
   }, [range, load]);
+
+  // The activity heatmap always covers the last year, independent of the
+  // week/month toggle above, so it's fetched once rather than on every range change.
+  useEffect(() => {
+    api.getHeatmap().then(setHeatmap).catch((err) => showToast(err.message, 'error'));
+  }, [showToast]);
 
   if (!stats) return <Empty>Loading…</Empty>;
 
@@ -83,11 +90,88 @@ export default function Dashboard() {
       </div>
 
       {/* Category breakdown (color = entity, always paired with a label) */}
-      <div className="card">
+      <div className="card" style={{ marginBottom: 24 }}>
         <h3 className="section-title">By category</h3>
         <CategoryBreakdown breakdown={stats.breakdown} />
       </div>
+
+      {/* Year heatmap (sequential, single-hue intensity) + current streak */}
+      {heatmap ? (
+        <div className="card-outline">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+            <h3>Activity</h3>
+            {heatmap.streak > 0 ? (
+              <span className="streak-badge">🔥 {heatmap.streak}-day streak</span>
+            ) : null}
+          </div>
+          <YearHeatmap days={heatmap.days} tz={settings.timezone} />
+          <div className="heatmap-legend">
+            <span>Less</span>
+            <span className="heatmap-cell" />
+            <span className="heatmap-cell level-1" />
+            <span className="heatmap-cell level-2" />
+            <span className="heatmap-cell level-3" />
+            <span className="heatmap-cell level-4" />
+            <span>More</span>
+          </div>
+        </div>
+      ) : null}
     </>
+  );
+}
+
+// Buckets a day's tracked ms into a fixed 0-4 intensity level for the
+// sequential single-hue ramp (see .heatmap-cell.level-* in styles.css).
+function intensityLevel(ms) {
+  const hours = ms / 3600000;
+  if (hours <= 0) return 0;
+  if (hours <= 2) return 1;
+  if (hours <= 4) return 2;
+  if (hours <= 6) return 3;
+  return 4;
+}
+
+// Groups a flat, chronological list of {date, ms} into Sunday-first week
+// columns — the standard GitHub-contributions layout, independent of the
+// app's configured first_day_of_week (which governs reports, not this widget).
+function groupIntoWeeks(days) {
+  const weeks = [];
+  let current = new Array(7).fill(null);
+  for (const day of days) {
+    const [y, m, d] = day.date.split('-').map(Number);
+    const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+    current[weekday] = day;
+    if (weekday === 6) {
+      weeks.push(current);
+      current = new Array(7).fill(null);
+    }
+  }
+  if (current.some((d) => d !== null)) weeks.push(current);
+  return weeks;
+}
+
+function YearHeatmap({ days }) {
+  const weeks = groupIntoWeeks(days);
+  return (
+    <div className="heatmap-scroll">
+      <div className="heatmap" role="img" aria-label="Tracked time per day over the last year">
+        {weeks.map((week, i) => (
+          <div className="heatmap-week" key={i}>
+            {week.map((day, j) =>
+              day ? (
+                <div
+                  key={day.date}
+                  className={`heatmap-cell level-${intensityLevel(day.ms)}`}
+                  title={`${day.date}: ${day.ms > 0 ? formatDuration(day.ms) + ' h' : 'no tracked time'}`}
+                />
+              ) : (
+                <div key={j} className="heatmap-cell" style={{ visibility: 'hidden' }} />
+              ),
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

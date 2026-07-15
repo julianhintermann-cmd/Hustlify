@@ -42,6 +42,7 @@ export const api = {
   stopTimer: () => req('POST', '/timer/stop'),
 
   getStats: (range) => req('GET', `/stats?range=${range}`),
+  getHeatmap: () => req('GET', '/heatmap'),
 
   // Uploads a backup file's raw bytes (not JSON) to replace the live database.
   async restoreBackup(file) {

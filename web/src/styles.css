@@ -364,6 +364,28 @@ textarea.input { height: auto; padding: 10px 14px; resize: vertical; }
 .breakdown-bar-track { flex: 1; height: 8px; background: var(--surface-strong); border-radius: var(--r-pill); overflow: hidden; }
 .breakdown-bar-fill { height: 100%; border-radius: var(--r-pill); }
 
+/* ---- Year heatmap (sequential, single-hue intensity ramp) ----------------- */
+.heatmap-scroll { overflow-x: auto; padding-bottom: 4px; }
+.heatmap { display: flex; gap: 3px; }
+.heatmap-week { display: flex; flex-direction: column; gap: 3px; }
+.heatmap-cell {
+  width: 11px; height: 11px; border-radius: 2px;
+  background: var(--hairline); flex: 0 0 auto;
+}
+.heatmap-cell.level-1 { background: color-mix(in srgb, var(--brand-accent) 25%, var(--surface-card)); }
+.heatmap-cell.level-2 { background: color-mix(in srgb, var(--brand-accent) 45%, var(--surface-card)); }
+.heatmap-cell.level-3 { background: color-mix(in srgb, var(--brand-accent) 70%, var(--surface-card)); }
+.heatmap-cell.level-4 { background: var(--brand-accent); }
+.heatmap-legend {
+  display: flex; align-items: center; gap: 4px; justify-content: flex-end;
+  font-size: 12px; color: var(--muted); margin-top: var(--s-sm);
+}
+.streak-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  background: var(--surface-card); padding: 4px 12px; border-radius: var(--r-pill);
+}
+
 /* ---- Bottom tab bar (mobile) ---------------------------------------------- */
 .bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;

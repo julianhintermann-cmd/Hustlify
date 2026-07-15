@@ -79,6 +79,27 @@ function overtime(db, config, now) {
   };
 }
 
+// Daily totals for the last ~year (a GitHub-contributions-style heatmap),
+// plus the current streak of consecutive days with tracked time. A day isn't
+// "missed" until it's over, so if today has no tracked time yet the streak
+// is counted from yesterday instead of breaking immediately.
+export function heatmapData(db, config, now = Date.now()) {
+  const tz = config.app.timezone;
+  const today = localDateString(now, tz);
+  const fromDate = addDays(today, -370); // 371 days inclusive, ~53 weeks
+  const days = dailySeries(db, fromDate, today, tz);
+
+  const msByDate = new Map(days.map((d) => [d.date, d.ms]));
+  let cursor = (msByDate.get(today) || 0) > 0 ? today : addDays(today, -1);
+  let streak = 0;
+  while (msByDate.has(cursor) && msByDate.get(cursor) > 0) {
+    streak++;
+    cursor = addDays(cursor, -1);
+  }
+
+  return { days, streak };
+}
+
 // The full stats payload for the dashboard.
 export function computeStats(db, config, { range = 'week', now = Date.now() } = {}) {
   const tz = config.app.timezone;

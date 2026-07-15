@@ -16,7 +16,7 @@ import {
   listForReport,
 } from './store/entries.js';
 import { getRunning, startTimer, stopTimer } from './store/timer.js';
-import { computeStats } from './store/stats.js';
+import { computeStats, heatmapData } from './store/stats.js';
 import { entriesToCsv } from './report/csv.js';
 import { generateReport } from './report/pdf.js';
 import { createBackupFile, cleanupBackupFile } from './store/backup.js';
@@ -140,6 +140,11 @@ export function createApiRouter({ db, config }) {
   // Statistics
   router.get('/stats', handle((req, res) => {
     res.json(computeStats(db, config, { range: req.query.range === 'month' ? 'month' : 'week' }));
+  }));
+
+  // Year heatmap + current streak
+  router.get('/heatmap', handle((req, res) => {
+    res.json(heatmapData(db, config));
   }));
 
   // CSV export

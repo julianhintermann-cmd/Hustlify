@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { openDatabase } from '../db.js';
 import { createEntry } from '../store/entries.js';
 import { createCategory } from '../store/categories.js';
-import { computeStats } from '../store/stats.js';
+import { computeStats, heatmapData } from '../store/stats.js';
 import { zonedDayStart } from '../time.js';
 
 const H = 60 * 60 * 1000;
@@ -99,5 +99,41 @@ describe('overtime', () => {
     expect(stats.overtime.trackedMs).toBe(45 * H);
     expect(stats.overtime.targetMs).toBe(40 * H);
     expect(stats.overtime.balanceMs).toBe(5 * H);
+  });
+});
+
+describe('heatmapData', () => {
+  const now = Date.UTC(2026, 6, 15, 12, 0); // Wed 2026-07-15 noon UTC
+
+  it('covers 371 days ending today, zero-filled', () => {
+    const { days } = heatmapData(db, baseConfig(), now);
+    expect(days).toHaveLength(371);
+    expect(days[days.length - 1].date).toBe('2026-07-15');
+    expect(days.every((d) => d.ms === 0)).toBe(true);
+  });
+
+  it('computes a streak of consecutive tracked days ending today', () => {
+    // Tracked today, yesterday and the day before — a 3-day streak.
+    createEntry(db, { startTs: Date.UTC(2026, 6, 13, 9, 0), endTs: Date.UTC(2026, 6, 13, 10, 0) });
+    createEntry(db, { startTs: Date.UTC(2026, 6, 14, 9, 0), endTs: Date.UTC(2026, 6, 14, 10, 0) });
+    createEntry(db, { startTs: Date.UTC(2026, 6, 15, 9, 0), endTs: Date.UTC(2026, 6, 15, 10, 0) });
+    const { streak } = heatmapData(db, baseConfig(), now);
+    expect(streak).toBe(3);
+  });
+
+  it('does not break the streak just because today has no entry yet', () => {
+    createEntry(db, { startTs: Date.UTC(2026, 6, 13, 9, 0), endTs: Date.UTC(2026, 6, 13, 10, 0) });
+    createEntry(db, { startTs: Date.UTC(2026, 6, 14, 9, 0), endTs: Date.UTC(2026, 6, 14, 10, 0) });
+    // Nothing tracked yet today (2026-07-15) — streak should still count
+    // yesterday and the day before as an active 2-day streak.
+    const { streak } = heatmapData(db, baseConfig(), now);
+    expect(streak).toBe(2);
+  });
+
+  it('resets to 0 once a day is missed', () => {
+    createEntry(db, { startTs: Date.UTC(2026, 6, 10, 9, 0), endTs: Date.UTC(2026, 6, 10, 10, 0) });
+    // Gap on the 11th-14th, nothing today either.
+    const { streak } = heatmapData(db, baseConfig(), now);
+    expect(streak).toBe(0);
   });
 });
