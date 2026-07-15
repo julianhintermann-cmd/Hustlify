@@ -104,6 +104,8 @@ export default function Track() {
   }
 
   const elapsed = running ? now - running.startTs : 0;
+  const warningThresholdMs = (settings.longTimerWarningHours || 0) * 3600000;
+  const showLongTimerWarning = running && warningThresholdMs > 0 && elapsed > warningThresholdMs;
 
   return (
     <>
@@ -122,6 +124,11 @@ export default function Track() {
               {running.categoryName ? running.categoryName : 'Uncategorized'}
               {running.note ? ` · ${running.note}` : ''}
             </div>
+            {showLongTimerWarning ? (
+              <div className="warning-banner">
+                Still running after {formatDuration(elapsed)} h — did you forget to stop it?
+              </div>
+            ) : null}
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
               <button className="btn btn-secondary" onClick={() => setEditing(running)}>
                 Edit

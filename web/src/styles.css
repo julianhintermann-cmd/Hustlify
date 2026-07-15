@@ -274,6 +274,13 @@ textarea.input { height: auto; padding: 10px 14px; resize: vertical; }
 .section-title { margin-bottom: var(--s-md); }
 .divider { height: 1px; background: var(--hairline); margin: var(--s-lg) 0; }
 
+.warning-banner {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: #fef3e2; color: #92400e;
+  border-radius: var(--r-md); padding: 10px 16px;
+  font-size: 13px; font-weight: 500; margin-bottom: var(--s-md);
+}
+
 /* ---- Timer card ---------------------------------------------------------- */
 .timer-card { text-align: center; }
 .timer-display {
