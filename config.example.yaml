@@ -17,8 +17,15 @@ work:
   hourly_rate: 0             # 0 hides all earnings. Any value > 0 shows estimated earnings.
   currency: "CHF"            # Currency label used next to earnings
   long_timer_warning_hours: 10  # Show a "still running?" warning past this many hours. 0 disables it.
+  idle_detection_minutes: 5     # Prompt to trim idle time after the browser tab was hidden/asleep this long while a timer runs. 0 disables it.
 
 report:
   person_name: ""            # Printed on the PDF work report (e.g. your name)
   company_name: ""           # Optional company / employer name on the report
   footer_note: ""            # Optional note printed at the bottom of the report
+
+notifications:
+  ntfy_url: ""               # e.g. "http://192.168.1.125:3061/hustlify" — empty disables all push notifications
+  timer_reminder: true       # Push once when a running timer passes long_timer_warning_hours
+  daily_summary_at: ""       # "HH:MM" local time for a daily push with today's tracked hours. Empty = off.
+  weekly_summary_at: ""      # "HH:MM" local time on first_day_of_week for a weekly summary push. Empty = off.

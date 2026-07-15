@@ -25,7 +25,10 @@ describe('API without auth', () => {
     expect(res.body.title).toBe('Hustlify');
     expect(res.body.authRequired).toBe(false);
     expect(res.body.longTimerWarningHours).toBe(10);
+    expect(res.body.idleDetectionMinutes).toBe(5);
     expect(res.body).not.toHaveProperty('password');
+    expect(res.body).not.toHaveProperty('notifications');
+    expect(JSON.stringify(res.body)).not.toMatch(/ntfy/i);
   });
 
   it('runs the full category + timer flow', async () => {

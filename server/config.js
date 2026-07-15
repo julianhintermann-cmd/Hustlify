@@ -20,13 +20,22 @@ export const DEFAULTS = {
     hourly_rate: 0,
     currency: 'CHF',
     long_timer_warning_hours: 10,
+    idle_detection_minutes: 5,
   },
   report: {
     person_name: '',
     company_name: '',
     footer_note: '',
   },
+  notifications: {
+    ntfy_url: '',
+    timer_reminder: true,
+    daily_summary_at: '',
+    weekly_summary_at: '',
+  },
 };
+
+const TIME_OF_DAY = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -79,6 +88,19 @@ export function loadConfig(configPath = process.env.CONFIG_PATH || '/config/conf
     0,
     Number(config.work.long_timer_warning_hours) || 0,
   );
+  config.work.idle_detection_minutes = Math.max(
+    0,
+    Number(config.work.idle_detection_minutes) || 0,
+  );
+
+  config.notifications.ntfy_url = String(config.notifications.ntfy_url || '').trim();
+  config.notifications.timer_reminder = Boolean(config.notifications.timer_reminder);
+  config.notifications.daily_summary_at = TIME_OF_DAY.test(config.notifications.daily_summary_at)
+    ? config.notifications.daily_summary_at
+    : '';
+  config.notifications.weekly_summary_at = TIME_OF_DAY.test(config.notifications.weekly_summary_at)
+    ? config.notifications.weekly_summary_at
+    : '';
 
   return config;
 }
@@ -96,6 +118,7 @@ export function publicSettings(config) {
     hourlyRate: config.work.hourly_rate,
     currency: config.work.currency,
     longTimerWarningHours: config.work.long_timer_warning_hours,
+    idleDetectionMinutes: config.work.idle_detection_minutes,
   };
 }
 
