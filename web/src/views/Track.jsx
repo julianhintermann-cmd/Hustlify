@@ -93,6 +93,16 @@ export default function Track() {
     }
   }
 
+  async function startAgain(entry) {
+    try {
+      await api.startTimer({ categoryId: entry.categoryId || null, note: entry.note || '' });
+      await refreshTimer();
+      showToast('Timer started');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
   const elapsed = running ? now - running.startTs : 0;
 
   return (
@@ -112,9 +122,14 @@ export default function Track() {
               {running.categoryName ? running.categoryName : 'Uncategorized'}
               {running.note ? ` · ${running.note}` : ''}
             </div>
-            <button className="btn btn-primary btn-lg" onClick={stopTimer}>
-              Stop timer
-            </button>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button className="btn btn-secondary" onClick={() => setEditing(running)}>
+                Edit
+              </button>
+              <button className="btn btn-primary btn-lg" onClick={stopTimer}>
+                Stop timer
+              </button>
+            </div>
           </>
         ) : (
           <div className="row" style={{ maxWidth: 620, margin: '0 auto' }}>
@@ -239,10 +254,18 @@ export default function Track() {
                   <td>{e.note || <span className="muted">—</span>}</td>
                   <td className="actions">
                     {!e.running && (
-                      <button className="icon-btn" onClick={() => setEditing(e)}>
-                        Edit
+                      <button
+                        className="icon-btn"
+                        onClick={() => startAgain(e)}
+                        disabled={!!running}
+                        title={running ? 'Stop the current timer first' : 'Start a new timer with this category and note'}
+                      >
+                        Start again
                       </button>
                     )}{' '}
+                    <button className="icon-btn" onClick={() => setEditing(e)}>
+                      Edit
+                    </button>{' '}
                     <button className="icon-btn danger" onClick={() => removeEntry(e.id)}>
                       Delete
                     </button>
@@ -261,8 +284,10 @@ export default function Track() {
           categories={categories}
           onClose={() => setEditing(null)}
           onSaved={() => {
+            const wasRunning = editing.running;
             setEditing(null);
             refreshEntries();
+            if (wasRunning) refreshTimer();
             showToast('Entry updated');
           }}
           showToast={showToast}
@@ -336,8 +361,9 @@ function ManualEntry({ tz, categories, onAdded, showToast }) {
 }
 
 function EntryEditor({ entry, tz, categories, onClose, onSaved, showToast }) {
+  const isRunning = entry.running;
   const [start, setStart] = useState(tsToLocalInput(entry.startTs, tz));
-  const [end, setEnd] = useState(tsToLocalInput(entry.endTs, tz));
+  const [end, setEnd] = useState(isRunning ? '' : tsToLocalInput(entry.endTs, tz));
   const [categoryId, setCategoryId] = useState(entry.categoryId ?? '');
   const [note, setNote] = useState(entry.note || '');
   const [busy, setBusy] = useState(false);
@@ -345,12 +371,13 @@ function EntryEditor({ entry, tz, categories, onClose, onSaved, showToast }) {
   async function save() {
     setBusy(true);
     try {
-      await api.updateEntry(entry.id, {
+      const patch = {
         categoryId: categoryId || null,
         startTs: localInputToTs(start, tz),
-        endTs: localInputToTs(end, tz),
         note,
-      });
+      };
+      if (!isRunning) patch.endTs = localInputToTs(end, tz);
+      await api.updateEntry(entry.id, patch);
       onSaved();
     } catch (err) {
       showToast(err.message, 'error');
@@ -362,15 +389,21 @@ function EntryEditor({ entry, tz, categories, onClose, onSaved, showToast }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginBottom: 16 }}>Edit entry</h3>
+        <h3 style={{ marginBottom: 16 }}>{isRunning ? 'Edit running timer' : 'Edit entry'}</h3>
         <div className="field">
           <label>Start</label>
           <input type="datetime-local" className="input" value={start} onChange={(e) => setStart(e.target.value)} />
         </div>
-        <div className="field">
-          <label>End</label>
-          <input type="datetime-local" className="input" value={end} onChange={(e) => setEnd(e.target.value)} />
-        </div>
+        {isRunning ? (
+          <p className="muted" style={{ fontSize: 13, marginTop: -8, marginBottom: 16 }}>
+            The timer is still running — stop it to set an end time.
+          </p>
+        ) : (
+          <div className="field">
+            <label>End</label>
+            <input type="datetime-local" className="input" value={end} onChange={(e) => setEnd(e.target.value)} />
+          </div>
+        )}
         <div className="field">
           <label>Category</label>
           <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
