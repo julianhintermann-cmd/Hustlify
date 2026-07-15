@@ -52,6 +52,17 @@ export function zonedDayStart(dateStr, tz) {
   return ts;
 }
 
+// Epoch ms of a specific 'HH:MM' wall-clock time on a 'YYYY-MM-DD' date in tz.
+export function zonedDateTimeToTs(dateStr, timeStr, tz) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [h, mi] = timeStr.split(':').map(Number);
+  const utcGuess = Date.UTC(y, m - 1, d, h, mi);
+  let ts = utcGuess - offsetMs(utcGuess, tz);
+  const refined = utcGuess - offsetMs(ts, tz);
+  if (refined !== ts) ts = refined;
+  return ts;
+}
+
 // Weekday index (0 = Sunday … 6 = Saturday) for a 'YYYY-MM-DD' calendar date.
 export function weekdayOf(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);

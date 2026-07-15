@@ -21,6 +21,7 @@ import { entriesToCsv } from './report/csv.js';
 import { generateReport } from './report/pdf.js';
 import { createBackupFile, cleanupBackupFile } from './store/backup.js';
 import { restoreFromBuffer } from './store/restore.js';
+import { importCsv } from './report/csv-import.js';
 import { verifyPassword, requireAuth, setAuthCookie, clearAuthCookie } from './auth.js';
 
 // Wrap a synchronous handler so thrown HttpErrors become clean JSON responses.
@@ -157,6 +158,18 @@ export function createApiRouter({ db, config }) {
     res.setHeader('Content-Disposition', `attachment; filename="hustlify-${stamp}.csv"`);
     res.send(csv);
   }));
+
+  // CSV import — accepts the same shape entriesToCsv exports.
+  router.post(
+    '/import.csv',
+    express.text({ type: ['text/csv', 'text/plain', 'application/octet-stream'], limit: '20mb' }),
+    handle((req, res) => {
+      if (typeof req.body !== 'string' || !req.body.trim()) {
+        throw new HttpError(400, 'No file uploaded');
+      }
+      res.json(importCsv(db, config, req.body));
+    }),
+  );
 
   // PDF work report
   router.get('/report.pdf', handle((req, res) => {

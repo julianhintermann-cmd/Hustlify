@@ -13,7 +13,7 @@ const PRESETS = [
 // Reports are downloaded straight from the server as files, so we build plain
 // anchor links carrying the current filters as query parameters.
 export default function Reports() {
-  const { categories, settings, showToast } = useApp();
+  const { categories, settings, showToast, refreshCategories } = useApp();
   const tz = settings.timezone;
   const today = todayInTz(tz);
   const monthStart = `${today.slice(0, 7)}-01`;
@@ -23,7 +23,9 @@ export default function Reports() {
   const [categoryId, setCategoryId] = useState('');
   const [preset, setPreset] = useState('thisMonth');
   const [restoring, setRestoring] = useState(false);
+  const [importing, setImporting] = useState(false);
   const fileInput = useRef(null);
+  const importInput = useRef(null);
 
   async function handleRestoreFile(e) {
     const file = e.target.files?.[0];
@@ -44,6 +46,24 @@ export default function Reports() {
     } catch (err) {
       showToast(err.message, 'error');
       setRestoring(false);
+    }
+  }
+
+  async function handleImportFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImporting(true);
+    try {
+      const result = await api.importCsv(file);
+      const parts = [`Imported ${result.imported} ${result.imported === 1 ? 'entry' : 'entries'}`];
+      if (result.skipped > 0) parts.push(`${result.skipped} skipped`);
+      showToast(parts.join(', '), { duration: 5000 });
+      await refreshCategories();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -163,6 +183,28 @@ export default function Reports() {
           file. The file is checked to make sure it's really a Hustlify backup before anything is
           changed.
         </p>
+      </div>
+
+      <div className="card-outline" style={{ maxWidth: 640, marginTop: 24 }}>
+        <h3 style={{ marginBottom: 8 }}>Import CSV</h3>
+        <p className="muted" style={{ fontSize: 14, marginBottom: 16 }}>
+          Import entries from a CSV file in the same format as the export above. Categories
+          referenced by name that don't exist yet are created automatically.
+        </p>
+        <button
+          className="btn btn-secondary"
+          onClick={() => importInput.current?.click()}
+          disabled={importing}
+        >
+          {importing ? 'Importing…' : 'Import CSV'}
+        </button>
+        <input
+          ref={importInput}
+          type="file"
+          accept=".csv,text/csv"
+          onChange={handleImportFile}
+          style={{ display: 'none' }}
+        />
       </div>
     </>
   );

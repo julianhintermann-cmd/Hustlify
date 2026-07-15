@@ -60,6 +60,25 @@ export const api = {
     }
     return data;
   },
+
+  // Uploads a CSV file's text content to import entries (and auto-create
+  // any categories referenced by name that don't already exist).
+  async importCsv(file) {
+    const text = await file.text();
+    const res = await fetch('/api/import.csv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/csv' },
+      body: text,
+    });
+    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+    const data = isJson ? await res.json() : null;
+    if (!res.ok) {
+      const err = new Error((data && data.error) || `Request failed (${res.status})`);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  },
 };
 
 export function queryString(params) {
