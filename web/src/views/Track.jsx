@@ -27,7 +27,9 @@ export default function Track() {
   const [entries, setEntries] = useState([]);
   const [filters, setFilters] = useState({ from: '', to: '', category_id: '', q: '' });
   const [editing, setEditing] = useState(null);
+  const [idlePrompt, setIdlePrompt] = useState(null);
   const tick = useRef(null);
+  const lastTickRef = useRef(Date.now());
 
   const refreshTimer = useCallback(async () => {
     try {
@@ -54,13 +56,28 @@ export default function Track() {
     refreshEntries();
   }, [refreshEntries]);
 
-  // Live stopwatch tick only while a timer runs.
+  // Live stopwatch tick only while a timer runs. Each tick also compares the
+  // actual elapsed time against the expected 1s step: a much larger gap means
+  // the tab was hidden/throttled or the device slept — i.e. the user was away.
   useEffect(() => {
     if (running) {
-      tick.current = setInterval(() => setNow(Date.now()), 1000);
+      lastTickRef.current = Date.now();
+      tick.current = setInterval(() => {
+        const nowTs = Date.now();
+        const idleMinutes = settings.idleDetectionMinutes || 0;
+        if (idleMinutes > 0) {
+          const gapMs = nowTs - lastTickRef.current;
+          const thresholdMs = Math.max(idleMinutes * 60000, 90000);
+          if (gapMs > thresholdMs) {
+            setIdlePrompt({ awayStartTs: lastTickRef.current, resumedAtTs: nowTs });
+          }
+        }
+        lastTickRef.current = nowTs;
+        setNow(nowTs);
+      }, 1000);
       return () => clearInterval(tick.current);
     }
-  }, [running]);
+  }, [running, settings.idleDetectionMinutes]);
 
   async function startTimer() {
     try {
@@ -102,6 +119,38 @@ export default function Track() {
       showToast('Timer started');
     } catch (err) {
       showToast(err.message, 'error');
+    }
+  }
+
+  async function keepIdleTime() {
+    setIdlePrompt(null);
+  }
+
+  async function discardIdleTime() {
+    if (!running || !idlePrompt) return;
+    const gapMs = idlePrompt.resumedAtTs - idlePrompt.awayStartTs;
+    try {
+      await api.updateEntry(running.id, { startTs: running.startTs + gapMs });
+      await refreshTimer();
+      showToast('Idle time discarded');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setIdlePrompt(null);
+    }
+  }
+
+  async function stopAtAwayPoint() {
+    if (!running || !idlePrompt) return;
+    try {
+      await api.updateEntry(running.id, { endTs: idlePrompt.awayStartTs });
+      await refreshTimer();
+      await refreshEntries();
+      showToast('Timer stopped at the point you went idle');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setIdlePrompt(null);
     }
   }
 
@@ -316,7 +365,44 @@ export default function Track() {
           showToast={showToast}
         />
       ) : null}
+
+      {idlePrompt ? (
+        <IdlePrompt
+          gapMs={idlePrompt.resumedAtTs - idlePrompt.awayStartTs}
+          onKeep={keepIdleTime}
+          onDiscard={discardIdleTime}
+          onStop={stopAtAwayPoint}
+        />
+      ) : null}
     </>
+  );
+}
+
+// Shown when the running timer's tick reveals a large gap since the last one
+// — the tab was likely hidden/throttled or the device slept. Lets the user
+// decide what that idle time should count as.
+function IdlePrompt({ gapMs, onKeep, onDiscard, onStop }) {
+  return (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h3 style={{ marginBottom: 12 }}>Welcome back</h3>
+        <p className="muted" style={{ marginBottom: 20 }}>
+          This tab looks like it was inactive for about {formatDuration(gapMs)} h. What should
+          happen to that time?
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button className="btn btn-primary" onClick={onDiscard}>
+            Discard the idle time
+          </button>
+          <button className="btn btn-secondary" onClick={onStop}>
+            Stop the timer at that point
+          </button>
+          <button className="btn btn-secondary" onClick={onKeep}>
+            Keep it — I was working
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
