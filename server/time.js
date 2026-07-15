@@ -91,6 +91,30 @@ export function dayRangeToMillis(fromDate, toDate, tz) {
   };
 }
 
+// Local wall-clock time 'HH:MM' of an instant in the timezone.
+export function formatClock(ts, tz) {
+  const dtf = new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return dtf.format(new Date(ts));
+}
+
+// A millisecond duration rendered as 'H:MM' (e.g. 3600000 -> '1:00').
+export function formatDuration(ms) {
+  const totalMinutes = Math.max(0, Math.round(ms / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}:${String(minutes).padStart(2, '0')}`;
+}
+
+// A millisecond duration as decimal hours rounded to 2 places (e.g. 1.5).
+export function decimalHours(ms) {
+  return Math.round((ms / 3600000) * 100) / 100;
+}
+
 // List every date string from fromDate to toDate inclusive.
 export function eachDay(fromDate, toDate) {
   const out = [];

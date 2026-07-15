@@ -85,6 +85,33 @@ export function listEntries(db, { startMs, endMs, categoryId, q, limit = 500 } =
   return rows.map(mapRow);
 }
 
+// Completed entries within [startMs, endMs) in chronological order, used by the
+// CSV export and the PDF work report.
+export function listForReport(db, { startMs, endMs, categoryId } = {}) {
+  const clauses = ['e.end_ts IS NOT NULL'];
+  const params = [];
+  if (Number.isFinite(startMs)) {
+    clauses.push('e.start_ts >= ?');
+    params.push(startMs);
+  }
+  if (Number.isFinite(endMs)) {
+    clauses.push('e.start_ts < ?');
+    params.push(endMs);
+  }
+  if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
+    clauses.push('e.category_id = ?');
+    params.push(Number(categoryId));
+  }
+  const rows = db.all(
+    `SELECT ${ENTRY_COLUMNS} FROM time_entries e
+       LEFT JOIN categories c ON c.id = e.category_id
+      WHERE ${clauses.join(' AND ')}
+      ORDER BY e.start_ts ASC`,
+    ...params,
+  );
+  return rows.map(mapRow);
+}
+
 // Create a completed manual entry. Both start and end are required.
 export function createEntry(db, { categoryId, startTs, endTs, note } = {}) {
   const start = validateTimestamp(startTs, 'startTs');
