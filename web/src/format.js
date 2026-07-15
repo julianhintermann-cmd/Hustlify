@@ -82,6 +82,43 @@ export function todayInTz(tz) {
   }).format(new Date());
 }
 
+// Pure calendar-date math on 'YYYY-MM-DD' strings — no timezone conversion
+// needed since these are already local calendar dates.
+function addDaysStr(dateStr, days) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const next = new Date(Date.UTC(y, m - 1, d + days));
+  const yy = next.getUTCFullYear();
+  const mm = String(next.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(next.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+function weekdayOfStr(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
+
+// Quick date-range presets for the Reports view. Returns { from, to } as
+// 'YYYY-MM-DD', relative to "today" in the configured timezone.
+export function presetRange(preset, tz, firstDayOfWeek = 'monday') {
+  const today = todayInTz(tz);
+  if (preset === 'last7') {
+    return { from: addDaysStr(today, -6), to: today };
+  }
+  if (preset === 'thisMonth') {
+    return { from: `${today.slice(0, 7)}-01`, to: today };
+  }
+  if (preset === 'lastMonth') {
+    const firstOfThisMonth = `${today.slice(0, 7)}-01`;
+    const lastOfPrevMonth = addDaysStr(firstOfThisMonth, -1);
+    return { from: `${lastOfPrevMonth.slice(0, 7)}-01`, to: lastOfPrevMonth };
+  }
+  // 'thisWeek' (default)
+  const firstIdx = firstDayOfWeek === 'sunday' ? 0 : 1;
+  const back = (weekdayOfStr(today) - firstIdx + 7) % 7;
+  return { from: addDaysStr(today, -back), to: today };
+}
+
 function tzOffsetMs(ts, tz) {
   const dtf = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
