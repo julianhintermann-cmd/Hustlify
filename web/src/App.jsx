@@ -3,7 +3,9 @@ import { api } from './api.js';
 import { AppContext } from './context.jsx';
 import { Toast } from './components/ui.jsx';
 import BottomNav from './components/BottomNav.jsx';
+import ThemeToggle from './components/ThemeToggle.jsx';
 import { useIsMobile } from './useIsMobile.js';
+import { useTheme } from './useTheme.js';
 import Login from './views/Login.jsx';
 import Dashboard from './views/Dashboard.jsx';
 import Track from './views/Track.jsx';
@@ -19,6 +21,7 @@ const VIEWS = [
 
 export default function App() {
   const isMobile = useIsMobile();
+  const [theme, setTheme] = useTheme();
   const [settings, setSettings] = useState(null);
   const [authed, setAuthed] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -94,6 +97,7 @@ export default function App() {
             </nav>
           ) : null}
           <div className="spacer" />
+          <ThemeToggle theme={theme} onChange={setTheme} />
           {settings.authRequired ? (
             <button
               className="btn btn-secondary btn-sm hide-sm"

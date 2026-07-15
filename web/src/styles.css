@@ -31,6 +31,8 @@
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
+  --warning-bg: #fef3e2;
+  --warning-text: #92400e;
 
   /* Category pastels */
   --badge-orange: #fb923c;
@@ -57,6 +59,43 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Dark theme — same token names, re-defined. Applied via [data-theme="dark"]
+   on <html>, set by useTheme.js (light/dark/auto, "auto" follows the OS). The
+   footer/toast stay the single deepest surface on the page (near-black),
+   preserving the "one deliberate dark accent" idea even though the whole
+   canvas is now dark. */
+:root[data-theme='dark'] {
+  --primary: #f5f5f5;
+  --primary-active: #e0e0e0;
+  --brand-accent: #60a5fa;
+
+  --canvas: #121214;
+  --surface-soft: #1a1b1e;
+  --surface-card: #1e1f23;
+  --surface-strong: #303136;
+  --surface-dark: #000000;
+  --surface-dark-elevated: #0a0a0a;
+  --hairline: #2f3034;
+  --hairline-soft: #202124;
+
+  --ink: #f5f5f5;
+  --body: #d1d3d8;
+  --muted: #9a9ca3;
+  --muted-soft: #7d7f85;
+  --on-primary: #111111;
+  --on-dark: #ffffff;
+  --on-dark-soft: #a1a1aa;
+
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --warning-bg: #4a3510;
+  --warning-text: #fbbf24;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -186,6 +225,12 @@ a { color: var(--ink); }
 .btn:disabled { background: var(--surface-strong); color: var(--muted); cursor: not-allowed; border-color: transparent; }
 .btn-lg { height: 52px; font-size: 16px; padding: 0 28px; }
 .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn-icon-circular {
+  width: 36px; height: 36px; border-radius: var(--r-pill);
+  background: var(--canvas); border: 1px solid var(--hairline); color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; flex: 0 0 auto;
+}
 
 /* ---- Cards --------------------------------------------------------------- */
 .card {
@@ -278,7 +323,7 @@ textarea.input { height: auto; padding: 10px 14px; resize: vertical; }
 
 .warning-banner {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: #fef3e2; color: #92400e;
+  background: var(--warning-bg); color: var(--warning-text);
   border-radius: var(--r-md); padding: 10px 16px;
   font-size: 13px; font-weight: 500; margin-bottom: var(--s-md);
 }
