@@ -30,10 +30,14 @@ export default function App() {
   const [loadError, setLoadError] = useState(null);
   const toastTimer = useRef(null);
 
-  const showToast = useCallback((message, type = 'info') => {
-    setToast({ message, type });
+  // Accepts either a type string (the original showToast(msg, 'error') form)
+  // or an options object: { type, action: { label, onClick }, duration }.
+  const showToast = useCallback((message, options = {}) => {
+    const opts = typeof options === 'string' ? { type: options } : options;
+    const { type = 'info', action = null, duration = 3000 } = opts;
+    setToast({ message, type, action });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3000);
+    toastTimer.current = setTimeout(() => setToast(null), duration);
   }, []);
 
   const refreshCategories = useCallback(async () => {

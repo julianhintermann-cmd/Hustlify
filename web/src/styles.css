@@ -316,8 +316,14 @@ textarea.input { height: auto; padding: 10px 14px; resize: vertical; }
   background: var(--surface-dark); color: var(--on-dark);
   padding: 12px 20px; border-radius: var(--r-md); box-shadow: var(--shadow-md);
   font-size: 14px; z-index: 50;
+  display: flex; align-items: center; gap: 16px; max-width: calc(100vw - 32px);
 }
 .toast.error { background: var(--error); }
+.toast-action {
+  border: none; background: transparent; color: inherit;
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  text-decoration: underline; cursor: pointer; padding: 0; flex: 0 0 auto;
+}
 .section-title { margin-bottom: var(--s-md); }
 .divider { height: 1px; background: var(--hairline); margin: var(--s-lg) 0; }
 

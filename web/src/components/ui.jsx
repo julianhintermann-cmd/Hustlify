@@ -28,5 +28,14 @@ export function Empty({ children }) {
 
 export function Toast({ toast }) {
   if (!toast) return null;
-  return <div className={`toast${toast.type === 'error' ? ' error' : ''}`}>{toast.message}</div>;
+  return (
+    <div className={`toast${toast.type === 'error' ? ' error' : ''}`}>
+      <span>{toast.message}</span>
+      {toast.action ? (
+        <button className="toast-action" onClick={toast.action.onClick}>
+          {toast.action.label}
+        </button>
+      ) : null}
+    </div>
+  );
 }

@@ -13,6 +13,8 @@ import {
   todayInTz,
 } from '../format.js';
 
+const UNDO_WINDOW_MS = 6000;
+
 export default function Track() {
   const { categories, settings, showToast } = useApp();
   const isMobile = useIsMobile();
@@ -30,6 +32,7 @@ export default function Track() {
   const [idlePrompt, setIdlePrompt] = useState(null);
   const tick = useRef(null);
   const lastTickRef = useRef(Date.now());
+  const pendingDeletes = useRef(new Map());
 
   const refreshTimer = useCallback(async () => {
     try {
@@ -42,7 +45,10 @@ export default function Track() {
 
   const refreshEntries = useCallback(async () => {
     try {
-      setEntries(await api.listEntries(filters));
+      const list = await api.listEntries(filters);
+      // A deletion may still be pending its undo window — don't let a refetch
+      // in the meantime (e.g. adding another entry) bring it back early.
+      setEntries(list.filter((e) => !pendingDeletes.current.has(e.id)));
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -101,15 +107,37 @@ export default function Track() {
     }
   }
 
-  async function removeEntry(id) {
-    if (!confirm('Delete this entry?')) return;
-    try {
-      await api.deleteEntry(id);
-      await refreshEntries();
-      showToast('Entry deleted');
-    } catch (err) {
-      showToast(err.message, 'error');
-    }
+  // Optimistic delete: the row disappears immediately, and a toast offers a
+  // few seconds to undo before the deletion is actually sent to the server.
+  function removeEntry(id) {
+    const entry = entries.find((e) => e.id === id);
+    if (!entry) return;
+    setEntries((list) => list.filter((e) => e.id !== id));
+
+    const timer = setTimeout(async () => {
+      pendingDeletes.current.delete(id);
+      try {
+        await api.deleteEntry(id);
+      } catch (err) {
+        showToast(err.message, 'error');
+        await refreshEntries();
+      }
+    }, UNDO_WINDOW_MS);
+    pendingDeletes.current.set(id, { entry, timer });
+
+    showToast('Entry deleted', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          const pending = pendingDeletes.current.get(id);
+          if (!pending) return;
+          clearTimeout(pending.timer);
+          pendingDeletes.current.delete(id);
+          setEntries((list) => [...list, pending.entry].sort((a, b) => b.startTs - a.startTs));
+        },
+      },
+      duration: UNDO_WINDOW_MS,
+    });
   }
 
   async function startAgain(entry) {
