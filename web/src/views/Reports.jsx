@@ -44,7 +44,7 @@ export default function Reports() {
       </div>
 
       <div className="card" style={{ maxWidth: 640 }}>
-        <div className="nav-pill-group" style={{ marginBottom: 16, flexWrap: 'wrap' }}>
+        <div className="nav-pill-group wrap-mobile" style={{ marginBottom: 16, flexWrap: 'wrap' }}>
           {PRESETS.map((p) => (
             <button
               key={p.id}

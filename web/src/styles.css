@@ -231,6 +231,8 @@ textarea.input { height: auto; padding: 10px 14px; resize: vertical; }
 }
 .badge .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
+.category-edit-row { display: flex; align-items: center; gap: 12px; }
+
 /* ---- Stat tiles ---------------------------------------------------------- */
 .stat-tile .label { font-size: 13px; color: var(--muted); font-weight: 500; }
 .stat-tile .value {
@@ -346,11 +348,24 @@ textarea.input { height: auto; padding: 10px 14px; resize: vertical; }
   /* Touch targets: comfortably above the 44px minimum. */
   .btn, .input, select.input, textarea.input { min-height: 44px; }
   .icon-btn { min-height: 40px; padding: 0 14px; }
-  /* Buttons inside a .row stack full-width instead of squeezing side by side. */
-  .row > .btn { flex: 1 1 100%; }
-  /* The timer's category/note/start row stacks instead of shrinking illegibly. */
-  .timer-start-row { flex-direction: column; }
-  .timer-start-row > * { flex: 1 1 auto; width: 100%; }
+  /* Rows of fields/buttons stack into a single column instead of shrinking
+     illegibly — native date/datetime inputs in particular can't shrink below
+     a fair amount of width, so side-by-side on a phone just clips them. */
+  .row { flex-direction: column; }
+  .row > * { width: 100%; flex: 1 1 auto; }
+
+  /* Preset pill groups that wrap to multiple rows (e.g. Reports date presets)
+     read better as a plain rounded rectangle than a very-tall stadium shape. */
+  .nav-pill-group.wrap-mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-radius: var(--r-lg);
+  }
+  .nav-pill-group.wrap-mobile .nav-pill { text-align: center; }
+
+  /* Category color swatches + name: stack instead of squeezing the name away. */
+  .category-edit-row { flex-direction: column; align-items: stretch; }
+  .category-edit-row .input { width: 100%; }
 
   /* Bottom-sheet modal instead of a centered dialog. */
   .modal-backdrop { align-items: flex-end; padding: 0; }

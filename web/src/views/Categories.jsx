@@ -83,7 +83,7 @@ export default function Categories() {
         <div className="grid grid-2">
           {categories.map((c) => (
             <div className="card-outline" key={c.id} style={{ opacity: c.archived ? 0.6 : 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="category-edit-row">
                 <ColorPicker value={c.color} onChange={(color) => update(c.id, { color })} compact />
                 <input
                   className="input"
