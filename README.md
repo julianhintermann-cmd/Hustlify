@@ -10,10 +10,31 @@ person or company: everything you'd want to change lives in `config.yaml`.
 
 ![Dashboard](docs/screenshot-dashboard.png)
 
+<img src="docs/screenshot-mobile.png" alt="Mobile layout" width="280" />
+
+## What's new in 1.1.0
+
+- **Mobile & touch layout** — a bottom tab bar, card-style entries, bottom-sheet
+  modals and larger touch targets on phone-sized screens; desktop is unchanged.
+- **Add to Home Screen** — install Hustlify like a native app (manifest, theme
+  color, touch icons).
+- **Long-running timer warning** — a banner appears if you forgot to stop the
+  timer (configurable threshold, off by default disabled with `0`).
+- **Edit the running timer** — fix its start time, category, or note without
+  stopping it.
+- **Quick "Start again"** — restart a timer pre-filled from a past entry.
+- **Database backup download** — one click, a full consistent copy of the SQLite
+  file, from the Reports view.
+- **Date-range presets in Reports** — This week / Last 7 days / This month / Last
+  month.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full history.
+
 ## Features
 
 - **Live timer** — one click to start, one to stop. The running timer lives in
-  the database, so it survives browser closes and container restarts.
+  the database, so it survives browser closes and container restarts, and can
+  be edited in place if you forgot to start it on time.
 - **Manual entries** — add or correct time by hand with start/end and a note.
 - **Categories** — colored, archivable labels to organize your time. Deleting a
   category keeps its entries (they simply become uncategorized).
@@ -23,11 +44,15 @@ person or company: everything you'd want to change lives in `config.yaml`.
 - **PDF work report** — a clean, day-grouped report with per-category totals and
   optional earnings, personalized from your YAML.
 - **CSV export** — the raw data for any period, ready for a spreadsheet.
+- **Database backup** — download a complete, consistent copy of the SQLite file
+  at any time.
 - **Search & filter** — filter entries by date range and category, and search
-  notes.
+  notes; quick presets for common report periods.
 - **Optional password** — set one in the YAML to require login; leave it empty
   for an open app on your LAN.
 - **Timezone-correct** — days, weeks and reports follow the timezone you set.
+- **Mobile-friendly** — a touch-optimized layout with a bottom navigation bar on
+  phones, installable as a home-screen app.
 
 ## Quick start (Docker Compose)
 
@@ -94,6 +119,7 @@ Every key is optional; omitted keys use the defaults shown here.
 | `work.tracking_start` | `""` | ISO date (`YYYY-MM-DD`); overtime is counted from here. |
 | `work.hourly_rate` | `0` | `0` hides earnings everywhere; any value shows estimates. |
 | `work.currency` | `CHF` | Currency label shown next to earnings. |
+| `work.long_timer_warning_hours` | `10` | Warn on the timer card past this many hours running. `0` disables it. |
 | `report.person_name` | `""` | Printed on the PDF work report. |
 | `report.company_name` | `""` | Optional company/employer on the report. |
 | `report.footer_note` | `""` | Optional note at the bottom of the report. |
@@ -107,6 +133,13 @@ Every key is optional; omitted keys use the defaults shown here.
 |---|---|
 | `/config/config.yaml` | Your configuration file (mount read-only). |
 | `/data` | Persistent SQLite database and the generated session secret. |
+
+### Backup
+
+Download a complete, consistent copy of the database at any time from the
+Reports view ("Download database backup"), or directly via `GET /api/backup.db`.
+To restore, stop the container, replace `data/hustlify.db` with the downloaded
+file, and start it again.
 
 ## Development
 
