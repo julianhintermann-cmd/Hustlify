@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api.js';
 import { useApp } from '../context.jsx';
+import { useIsMobile } from '../useIsMobile.js';
 import { Empty } from '../components/ui.jsx';
 import {
   formatStopwatch,
@@ -14,6 +15,7 @@ import {
 
 export default function Track() {
   const { categories, settings, showToast } = useApp();
+  const isMobile = useIsMobile();
   const tz = settings.timezone;
   const activeCategories = useMemo(() => categories.filter((c) => !c.archived), [categories]);
 
@@ -139,7 +141,7 @@ export default function Track() {
             </div>
           </>
         ) : (
-          <div className="row" style={{ maxWidth: 620, margin: '0 auto' }}>
+          <div className="row timer-start-row" style={{ maxWidth: 620, margin: '0 auto' }}>
             <select className="input" value={timerCat} onChange={(e) => setTimerCat(e.target.value)}>
               <option value="">Uncategorized</option>
               {activeCategories.map((c) => (
@@ -226,6 +228,20 @@ export default function Track() {
 
       {entries.length === 0 ? (
         <Empty>No entries yet. Start the timer or add one manually.</Empty>
+      ) : isMobile ? (
+        <div>
+          {entries.map((e) => (
+            <EntryCard
+              key={e.id}
+              entry={e}
+              tz={tz}
+              timerRunning={!!running}
+              onStartAgain={() => startAgain(e)}
+              onEdit={() => setEditing(e)}
+              onDelete={() => removeEntry(e.id)}
+            />
+          ))}
+        </div>
       ) : (
         <div className="card-outline" style={{ padding: 0, overflowX: 'auto' }}>
           <table className="table">
@@ -301,6 +317,52 @@ export default function Track() {
         />
       ) : null}
     </>
+  );
+}
+
+// Card representation of a time entry, used on phone-sized viewports instead
+// of the entries table (a wide table doesn't fit or scroll well on a phone).
+function EntryCard({ entry: e, tz, timerRunning, onStartAgain, onEdit, onDelete }) {
+  return (
+    <div className="entry-card">
+      <div className="entry-card-row">
+        <div>
+          <div>{formatDate(e.startTs, tz)}</div>
+          <div className="entry-card-meta">
+            {formatClock(e.startTs, tz)}
+            {e.running ? ' · running' : `–${formatClock(e.endTs, tz)}`}
+            {!e.running ? ` · ${formatDuration(e.durationMs)} h` : ''}
+          </div>
+        </div>
+        {e.categoryColor ? (
+          <span className="badge">
+            <span className="swatch" style={{ background: e.categoryColor }} />
+            {e.categoryName}
+          </span>
+        ) : (
+          <span className="muted" style={{ fontSize: 13 }}>Uncategorized</span>
+        )}
+      </div>
+      {e.note ? <div className="entry-card-note">{e.note}</div> : null}
+      <div className="entry-card-actions">
+        {!e.running && (
+          <button
+            className="icon-btn"
+            onClick={onStartAgain}
+            disabled={timerRunning}
+            title={timerRunning ? 'Stop the current timer first' : 'Start a new timer with this category and note'}
+          >
+            Start again
+          </button>
+        )}
+        <button className="icon-btn" onClick={onEdit}>
+          Edit
+        </button>
+        <button className="icon-btn danger" onClick={onDelete}>
+          Delete
+        </button>
+      </div>
+    </div>
   );
 }
 

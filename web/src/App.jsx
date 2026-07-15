@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
 import { AppContext } from './context.jsx';
 import { Toast } from './components/ui.jsx';
+import BottomNav from './components/BottomNav.jsx';
+import { useIsMobile } from './useIsMobile.js';
 import Login from './views/Login.jsx';
 import Dashboard from './views/Dashboard.jsx';
 import Track from './views/Track.jsx';
@@ -16,6 +18,7 @@ const VIEWS = [
 ];
 
 export default function App() {
+  const isMobile = useIsMobile();
   const [settings, setSettings] = useState(null);
   const [authed, setAuthed] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -71,23 +74,25 @@ export default function App() {
 
   return (
     <AppContext.Provider value={ctx}>
-      <div className="app">
+      <div className={`app${isMobile ? ' is-mobile' : ''}`}>
         <header className="topnav">
           <div className="wordmark">
             <span className="dot" />
             {settings.title}
           </div>
-          <nav className="nav-pill-group">
-            {VIEWS.map((v) => (
-              <button
-                key={v.id}
-                className={`nav-pill${view === v.id ? ' active' : ''}`}
-                onClick={() => setView(v.id)}
-              >
-                {v.label}
-              </button>
-            ))}
-          </nav>
+          {!isMobile ? (
+            <nav className="nav-pill-group">
+              {VIEWS.map((v) => (
+                <button
+                  key={v.id}
+                  className={`nav-pill${view === v.id ? ' active' : ''}`}
+                  onClick={() => setView(v.id)}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </nav>
+          ) : null}
           <div className="spacer" />
           {settings.authRequired ? (
             <button
@@ -106,15 +111,19 @@ export default function App() {
           <Active />
         </main>
 
-        <footer className="footer">
-          <div className="inner">
-            <div className="wordmark">
-              <span className="dot" />
-              {settings.title}
+        {!isMobile ? (
+          <footer className="footer">
+            <div className="inner">
+              <div className="wordmark">
+                <span className="dot" />
+                {settings.title}
+              </div>
+              <small>Self-hosted time tracking · SQLite · configured via YAML</small>
             </div>
-            <small>Self-hosted time tracking · SQLite · configured via YAML</small>
-          </div>
-        </footer>
+          </footer>
+        ) : null}
+
+        {isMobile ? <BottomNav views={VIEWS} active={view} onSelect={setView} /> : null}
 
         <Toast toast={toast} />
       </div>

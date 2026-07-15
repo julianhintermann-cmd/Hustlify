@@ -311,10 +311,57 @@ textarea.input { height: auto; padding: 10px 14px; resize: vertical; }
 .breakdown-bar-track { flex: 1; height: 8px; background: var(--surface-strong); border-radius: var(--r-pill); overflow: hidden; }
 .breakdown-bar-fill { height: 100%; border-radius: var(--r-pill); }
 
+/* ---- Bottom tab bar (mobile) ---------------------------------------------- */
+.bottom-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: flex; background: var(--canvas);
+  border-top: 1px solid var(--hairline);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.bottom-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: none; background: transparent; color: var(--muted);
+  font-family: var(--font); font-size: 11px; font-weight: 500;
+  padding: 8px 4px 10px; min-height: 56px; cursor: pointer;
+}
+.bottom-nav-item.active { color: var(--ink); }
+
+/* ---- Entry cards (mobile list, replaces the entries table) ---------------- */
+.entry-card {
+  background: var(--canvas); border: 1px solid var(--hairline);
+  border-radius: var(--r-lg); padding: var(--s-md); margin-bottom: var(--s-sm);
+}
+.entry-card-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.entry-card-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.entry-card-note { font-size: 14px; color: var(--body); margin-top: 8px; }
+.entry-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+.entry-card-actions .icon-btn { flex: 1; }
+
 /* ---- Responsive ---------------------------------------------------------- */
 @media (max-width: 900px) {
   .grid-3 { grid-template-columns: 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  /* Touch targets: comfortably above the 44px minimum. */
+  .btn, .input, select.input, textarea.input { min-height: 44px; }
+  .icon-btn { min-height: 40px; padding: 0 14px; }
+  /* Buttons inside a .row stack full-width instead of squeezing side by side. */
+  .row > .btn { flex: 1 1 100%; }
+  /* The timer's category/note/start row stacks instead of shrinking illegibly. */
+  .timer-start-row { flex-direction: column; }
+  .timer-start-row > * { flex: 1 1 auto; width: 100%; }
+
+  /* Bottom-sheet modal instead of a centered dialog. */
+  .modal-backdrop { align-items: flex-end; padding: 0; }
+  .modal {
+    width: 100%; border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: var(--s-lg); padding-bottom: calc(var(--s-lg) + env(safe-area-inset-bottom, 0));
+    max-height: 85vh; overflow-y: auto;
+  }
+
+  /* Room for the fixed bottom tab bar. */
+  .is-mobile .main { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0)); }
 }
 @media (max-width: 640px) {
   .main { padding: var(--s-xl) var(--s-md); }
