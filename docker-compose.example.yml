@@ -1,0 +1,12 @@
+services:
+  hustlify:
+    image: julianhintermann/hustlify:latest
+    container_name: hustlify
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Your configuration file (read-only is fine)
+      - ./config.yaml:/config/config.yaml:ro
+      # Persistent data: the SQLite database and session secret live here
+      - ./data:/data

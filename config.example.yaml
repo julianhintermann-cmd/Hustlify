@@ -1,0 +1,23 @@
+# Hustlify configuration
+# Copy this file to config.yaml and adjust to your needs.
+# Every key is optional — omitted keys fall back to the defaults shown here.
+
+app:
+  title: "Hustlify"          # Shown in the header and the browser tab
+  port: 3000                 # Port the server listens on inside the container
+  timezone: "Europe/Zurich"  # IANA timezone used for grouping days and reports
+  first_day_of_week: monday  # monday | sunday
+
+auth:
+  password: ""               # Empty = no login required. Set a value to protect the app.
+
+work:
+  weekly_target_hours: 40    # Target hours per week. 0 disables overtime tracking.
+  tracking_start: ""         # Optional ISO date (YYYY-MM-DD). Overtime is counted from here.
+  hourly_rate: 0             # 0 hides all earnings. Any value > 0 shows estimated earnings.
+  currency: "CHF"            # Currency label used next to earnings
+
+report:
+  person_name: ""            # Printed on the PDF work report (e.g. your name)
+  company_name: ""           # Optional company / employer name on the report
+  footer_note: ""            # Optional note printed at the bottom of the report
