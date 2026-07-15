@@ -1,6 +1,6 @@
 import express from 'express';
 import { HttpError } from './errors.js';
-import { publicSettings } from './config.js';
+import { publicSettings, dbPath } from './config.js';
 import { zonedDayStart, addDays, localDateString } from './time.js';
 import {
   listCategories,
@@ -20,6 +20,7 @@ import { computeStats } from './store/stats.js';
 import { entriesToCsv } from './report/csv.js';
 import { generateReport } from './report/pdf.js';
 import { createBackupFile, cleanupBackupFile } from './store/backup.js';
+import { restoreFromBuffer } from './store/restore.js';
 import { verifyPassword, requireAuth, setAuthCookie, clearAuthCookie } from './auth.js';
 
 // Wrap a synchronous handler so thrown HttpErrors become clean JSON responses.
@@ -178,6 +179,20 @@ export function createApiRouter({ db, config }) {
       if (err && !res.headersSent) res.status(500).json({ error: 'Backup failed' });
     });
   }));
+
+  // Restore the database from an uploaded backup file. Validated against the
+  // expected schema before anything is touched; applied in place, no restart.
+  router.post(
+    '/restore',
+    express.raw({ type: 'application/octet-stream', limit: '200mb' }),
+    handle((req, res) => {
+      if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+        throw new HttpError(400, 'No file uploaded');
+      }
+      restoreFromBuffer(db, req.body, dbPath());
+      res.json({ ok: true });
+    }),
+  );
 
   return router;
 }

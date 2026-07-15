@@ -83,6 +83,30 @@ class Db {
   close() {
     this.handle.close();
   }
+
+  // Replace the database file on disk with `buffer` and reopen it, applying
+  // migrations if the restored file is on an older schema version. Used to
+  // apply an uploaded backup without restarting the process — every store
+  // function holds a reference to this same Db instance, so they transparently
+  // pick up the new handle once this returns.
+  //
+  // Order matters: the current connection (and its WAL lock on `file`) must
+  // be closed *before* the file is overwritten, and any WAL/SHM sidecar files
+  // from the previous database must be removed since they'd otherwise be
+  // replayed against a main file they don't correspond to.
+  replaceFile(file, buffer) {
+    this.handle.close();
+    fs.writeFileSync(file, buffer);
+    for (const suffix of ['-wal', '-shm']) {
+      try {
+        fs.unlinkSync(file + suffix);
+      } catch {
+        // fine if it didn't exist
+      }
+    }
+    this.handle = openHandle(file);
+    runMigrations(this);
+  }
 }
 
 function runMigrations(db) {
@@ -94,16 +118,20 @@ function runMigrations(db) {
   }
 }
 
-// Open (and if necessary create + migrate) the SQLite database at the given path.
-// Pass ':memory:' for tests.
-export function openDatabase(file) {
+function openHandle(file) {
   if (file !== ':memory:') {
     fs.mkdirSync(path.dirname(file), { recursive: true });
   }
   const handle = new DatabaseSync(file);
-  const db = new Db(handle);
-  db.exec('PRAGMA journal_mode = WAL');
-  db.exec('PRAGMA foreign_keys = ON');
+  handle.exec('PRAGMA journal_mode = WAL');
+  handle.exec('PRAGMA foreign_keys = ON');
+  return handle;
+}
+
+// Open (and if necessary create + migrate) the SQLite database at the given path.
+// Pass ':memory:' for tests.
+export function openDatabase(file) {
+  const db = new Db(openHandle(file));
   runMigrations(db);
   return db;
 }

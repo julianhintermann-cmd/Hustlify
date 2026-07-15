@@ -42,6 +42,23 @@ export const api = {
   stopTimer: () => req('POST', '/timer/stop'),
 
   getStats: (range) => req('GET', `/stats?range=${range}`),
+
+  // Uploads a backup file's raw bytes (not JSON) to replace the live database.
+  async restoreBackup(file) {
+    const res = await fetch('/api/restore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: file,
+    });
+    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+    const data = isJson ? await res.json() : null;
+    if (!res.ok) {
+      const err = new Error((data && data.error) || `Request failed (${res.status})`);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  },
 };
 
 export function queryString(params) {
