@@ -19,6 +19,7 @@ export const DEFAULTS = {
     tracking_start: '',
     hourly_rate: 0,
     currency: 'CHF',
+    long_timer_warning_hours: 10,
   },
   report: {
     person_name: '',
@@ -74,6 +75,10 @@ export function loadConfig(configPath = process.env.CONFIG_PATH || '/config/conf
   config.work.weekly_target_hours = Math.max(0, Number(config.work.weekly_target_hours) || 0);
   config.work.hourly_rate = Math.max(0, Number(config.work.hourly_rate) || 0);
   config.work.currency = String(config.work.currency || DEFAULTS.work.currency);
+  config.work.long_timer_warning_hours = Math.max(
+    0,
+    Number(config.work.long_timer_warning_hours) || 0,
+  );
 
   return config;
 }
@@ -90,6 +95,7 @@ export function publicSettings(config) {
     trackingStart: config.work.tracking_start || null,
     hourlyRate: config.work.hourly_rate,
     currency: config.work.currency,
+    longTimerWarningHours: config.work.long_timer_warning_hours,
   };
 }
 

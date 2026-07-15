@@ -16,6 +16,7 @@ work:
   tracking_start: ""         # Optional ISO date (YYYY-MM-DD). Overtime is counted from here.
   hourly_rate: 0             # 0 hides all earnings. Any value > 0 shows estimated earnings.
   currency: "CHF"            # Currency label used next to earnings
+  long_timer_warning_hours: 10  # Show a "still running?" warning past this many hours. 0 disables it.
 
 report:
   person_name: ""            # Printed on the PDF work report (e.g. your name)

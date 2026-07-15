@@ -24,6 +24,7 @@ describe('API without auth', () => {
     expect(res.status).toBe(200);
     expect(res.body.title).toBe('Hustlify');
     expect(res.body.authRequired).toBe(false);
+    expect(res.body.longTimerWarningHours).toBe(10);
     expect(res.body).not.toHaveProperty('password');
   });
 
@@ -67,6 +68,34 @@ describe('API without auth', () => {
     expect(pdf.status).toBe(200);
     expect(pdf.headers['content-type']).toBe('application/pdf');
     expect(pdf.body.slice(0, 4).toString()).toBe('%PDF');
+  });
+
+  it('downloads a valid SQLite backup file', async () => {
+    await request(app).post('/api/categories').send({ name: 'Dev', color: '#3b82f6' });
+
+    const res = await request(app).get('/api/backup.db').buffer(true).parse((r, cb) => {
+      const chunks = [];
+      r.on('data', (c) => chunks.push(c));
+      r.on('end', () => cb(null, Buffer.concat(chunks)));
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/octet-stream');
+    expect(res.headers['content-disposition']).toMatch(/hustlify-backup-.*\.db/);
+    expect(res.body.slice(0, 16).toString('latin1')).toBe('SQLite format 3\0');
+  });
+
+  it('edits the running timer without stopping it', async () => {
+    const start = await request(app).post('/api/timer/start').send({ note: 'first' });
+    const earlierStart = start.body.startTs - 60_000;
+
+    const edited = await request(app)
+      .patch(`/api/entries/${start.body.id}`)
+      .send({ startTs: earlierStart, note: 'corrected' });
+
+    expect(edited.status).toBe(200);
+    expect(edited.body.running).toBe(true);
+    expect(edited.body.startTs).toBe(earlierStart);
+    expect(edited.body.note).toBe('corrected');
   });
 });
 
