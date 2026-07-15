@@ -1,6 +1,6 @@
 {
   "name": "hustlify",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Self-hosted time tracking web app configured entirely through a single YAML file.",
   "license": "MIT",
   "type": "module",

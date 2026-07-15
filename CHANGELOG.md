@@ -2,6 +2,24 @@
 
 All notable changes to Hustlify are documented in this file.
 
+## 1.2.0
+
+### Added
+
+- **Database restore** — upload a backup file to replace the live database in place (no restart needed). The file is validated (SQLite header, expected tables/columns) before anything is touched, so an unrelated or corrupt file is rejected with a clear error rather than corrupting your data.
+- **CSV import** — import entries from the same CSV shape the app exports. Categories referenced by name that don't exist yet are created automatically.
+- **Idle / away detection** — if the timer's tick reveals a large gap (the browser tab was hidden/throttled, or the device slept), a "Welcome back" prompt lets you discard the idle time, stop the timer at the point you went idle, or keep it. Configurable via `work.idle_detection_minutes` (default 5, `0` disables it).
+- **ntfy push notifications** (optional) — a timer-still-running reminder, a daily summary, and a weekly summary, each sent once per occurrence via a self-hosted or public [ntfy](https://ntfy.sh) topic. Off by default; set `notifications.ntfy_url` to enable.
+- **Dark mode** — a theme toggle in the header cycles System / Light / Dark. "System" follows the OS live; your choice is remembered per device.
+- **Undo on delete** — deleting an entry now shows a 6-second "Undo" toast instead of a blocking confirmation dialog.
+- **Year activity heatmap + streak** — a GitHub-contributions-style calendar on the Dashboard shows the last year of tracked time at a glance, plus your current daily streak.
+- **Mobile layout fixes** — several field rows (manual time entry, entry filters, category color/name) that were squeezing side-by-side on phones now stack into a single column.
+
+### Configuration
+
+- New `work.idle_detection_minutes` key (default `5`; `0` disables the idle prompt).
+- New `notifications` section: `ntfy_url`, `timer_reminder`, `daily_summary_at`, `weekly_summary_at`. See `config.example.yaml`.
+
 ## 1.1.0
 
 ### Added
