@@ -9,3 +9,6 @@ data/
 .DS_Store
 config.yaml
 !config.example.yaml
+
+# Personal, NAS-specific deployment config (never committed)
+nas-config/

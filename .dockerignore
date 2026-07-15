@@ -7,5 +7,6 @@ data
 .git
 .gitignore
 config.yaml
+nas-config
 .vscode
 .idea
